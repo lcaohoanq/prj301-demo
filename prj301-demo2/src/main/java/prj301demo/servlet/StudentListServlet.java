@@ -44,12 +44,30 @@ public class StudentListServlet extends HttpServlet {
             out.println("<title>Servlet StudentListServlet</title>");            
             out.println("</head>");
             out.println("<body>");
+            //table
             out.println("<h1>Student List </h1>");
+            out.println("<table>");
+            out.println("<tr><td>Id</td>");
+            out.println("<td>First Name</td>");
+            out.println("<td>Last Name</td>");
+            out.println("<td>Age</td></tr>");
+           try{
+               
+               ResultSet rs = DBUtils.getConnection().prepareStatement("SELECT id, firstname, lastname, age FROM Student").executeQuery();
+               if(rs != null){
+                   while(rs.next()){
+                       out.println("<tr><td>" + rs.getString("id") + " </td>");
+                       out.println("<td>" + rs.getString("firstname") + " </td>");
+                       out.println("<td>" + rs.getString("lastname") + " </td>");
+                       out.println("<td>" + rs.getString("age") + " </td></tr>");
+                   }
+               }               
+           }catch(Exception e){
+               System.out.println(e.getMessage());
+           }
             
-           
-            
-        
             out.println("</table>");
+            //table
             out.println("</body>");
             out.println("</html>");
         }

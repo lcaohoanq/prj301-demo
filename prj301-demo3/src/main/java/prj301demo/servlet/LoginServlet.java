@@ -10,6 +10,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import prj301demo.Users.UserDAO;
+import prj301demo.Users.UserDTO;
 
 /**
  *
@@ -18,8 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -30,23 +31,27 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
-           
-            
+
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>PROJ301 Demo - Login result</title>");            
+            out.println("<title>PROJ301 Demo - Login result</title>");
             out.println("</head>");
             out.println("<body>");
+
+            String username = request.getParameter("user");
+            String password = request.getParameter("password");
             
-           
-            if (request.getParameter("user").equals("dung")  && request.getParameter("password").equals("dung")){
-                out.print("Correct !");
-            }else{
-                out.print("Incorrect !");
+            UserDAO userDAO = new UserDAO();
+            UserDTO user = userDAO.login(username, password); 
+            
+            if (user != null) {
+                request.setAttribute("usersession", user);
+                request.getRequestDispatcher("StudentList").forward(request, response);
+            } else {
+                response.sendRedirect("./login.html");
             }
-            
-                        
+
             out.println("</body>");
             out.println("</html>");
         }
