@@ -5,6 +5,14 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
 </head>
+
+    <%
+        String msg = (String) request.getAttribute("error");
+        if(msg != null) {
+            out.println(msg);
+        }
+    %>
+
     <body>
         <h1>Please login</h1>
         <img src="images/header.jpg" width="200">

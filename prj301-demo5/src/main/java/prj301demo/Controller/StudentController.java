@@ -31,8 +31,7 @@ import prj301demo.Users.UserDTO;
 public class StudentController extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -42,95 +41,136 @@ public class StudentController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-            String action = request.getParameter("action");
-            String keyword = request.getParameter("keyword");            
-            if (keyword == null) keyword = "";
-            String sortCol = request.getParameter("colSort");
-            
-            
-          
-            StudentDAO studentDAO = new StudentDAO();            
-            if (action == null || action.equals("list")){
-                
-                    
-                StudentDAO dao = new StudentDAO();
-                List<StudentDTO> list = dao.list(keyword, sortCol);
-                request.setAttribute("studentlist", list);
-                
-                request.getRequestDispatcher("/studentlist.jsp").forward(request, response);
-                
-            }
-            
-            else if ( action.equals("details")){
-                
-                Integer id = null;
-                try{
-                    id = Integer.parseInt(request.getParameter("id"));      
-                }catch (NumberFormatException ex){
-                    log("Parameter id has wrong format.");
-                }
-                  
-                StudentDTO student = null;
-                if (id != null){
-                    student =  studentDAO.load(id);
-                }
+        String action = request.getParameter("action");
+        String keyword = request.getParameter("keyword") != null ? request.getParameter("keyword") : "";
+        String sortCol = request.getParameter("colSort");
 
-                request.setAttribute("object", student);
-                RequestDispatcher rd = request.getRequestDispatcher("studentdetails.jsp");
-                rd.forward(request, response);
-            }
-            
-            else if ( action.equals("edit")){
-                
-               
-            }
-            
-            else if ( action.equals("create")){
-                
-                
-            }
-            
-            
-            else if (action.equals("update")){
-                 
-            }
-            
-            else if (action.equals("insert")){
-                 
-                  
-                 
-            }
-            else if (action.equals("delete")){
-                
-                Long id = null;
-                try{
-                    id = Long.parseLong(request.getParameter("id"));      
-                }catch (NumberFormatException ex){
-                    
-                }
-                  
-                if (id != null){
-                    studentDAO.delete(id);
-                }
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("usersession") == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
 
-                List<StudentDTO> list = studentDAO.list(keyword, sortCol);
-                
-                request.setAttribute("list", list);
-                RequestDispatcher rd = request.getRequestDispatcher("studentlist.jsp");
-                rd.forward(request, response);
+        StudentDAO studentDAO = new StudentDAO();
+        try {
+            switch (action != null ? action : "list") {
+                case "details":
+                    handleDetailsAction(request, response, studentDAO);
+                    break;
+                case "edit":
+                    handleEditAction(request, response, studentDAO);
+                    break;
+                case "create":
+                    handleCreateAction(request, response);
+                    break;
+                case "update":
+                    handleUpdateAction(request, response, studentDAO);
+                    break;
+                case "insert":
+                    handleInsertAction(request, response, studentDAO);
+                    break;
+                case "delete":
+                    handleDeleteAction(request, response, studentDAO, keyword, sortCol);
+                    break;
+                default:
+                    handleListAction(request, response, studentDAO, keyword, sortCol);
+                    break;
             }
-        
-        
-            
-            
-            if (action == null || action.equals("")  ||  action.equals("list")){
-                    
-                StudentDAO dao = new StudentDAO();
-                List<StudentDTO> list = dao.list(keyword, sortCol);
-                request.setAttribute("studentlist", list);
-                
-                request.getRequestDispatcher("/studentlist.jsp").forward(request, response);
-            }
+        } catch (Exception ex) {
+            log("Error processing request: " + ex.getMessage(), ex);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+        }
+    }
+
+    private void handleDetailsAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO)
+            throws ServletException, IOException {
+        Integer id = parseInteger(request.getParameter("id"));
+        StudentDTO student = id != null ? studentDAO.load(id) : null;
+        request.setAttribute("object", student);
+        request.getRequestDispatcher("./studentdetails.jsp").forward(request, response);
+    }
+
+    private void handleEditAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO)
+            throws ServletException, IOException {
+        Integer id = parseInteger(request.getParameter("id"));
+        StudentDTO student = id != null ? studentDAO.load(id) : null;
+        request.setAttribute("object", student);
+        request.getRequestDispatcher("./studentedit.jsp").forward(request, response);
+    }
+
+    private void handleCreateAction(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("student", new StudentDTO());
+        request.getRequestDispatcher("./studentedit.jsp").forward(request, response);
+    }
+
+    private void handleUpdateAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO)
+            throws ServletException, IOException {
+
+        Integer id = parseInteger(request.getParameter("id"));
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        int age = Integer.parseInt(request.getParameter("age"));
+        StudentDTO student = id != null ? studentDAO.load(id) : new StudentDTO();
+        student.setFirstname(firstName);
+        student.setLastname(lastName);
+        student.setAge(age);
+        studentDAO.update(student);
+
+        request.setAttribute("student", student);
+        request.getRequestDispatcher("./studentdetails.jsp").forward(request, response);
+    }
+
+    private void handleInsertAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO)
+            throws ServletException, IOException {
+
+        int id = parseInteger(request.getParameter("id"));
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        int age = Integer.parseInt(request.getParameter("age"));
+        StudentDTO student = new StudentDTO();
+        student.setId(id);
+        student.setFirstname(firstName);
+        student.setLastname(lastName);
+        student.setAge(age);
+        studentDAO.insert(student);
+
+        request.setAttribute("object", student);
+        response.sendRedirect("./StudentController");
+    }
+
+    private void handleDeleteAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO,
+            String keyword, String sortCol) throws ServletException, IOException {
+        Long id = parseLong(request.getParameter("id"));
+        if (id != null) {
+            studentDAO.delete(id);
+        }
+        handleListAction(request, response, studentDAO, keyword, sortCol);
+    }
+
+    private void handleListAction(HttpServletRequest request, HttpServletResponse response, StudentDAO studentDAO,
+            String keyword, String sortCol) throws ServletException, IOException {
+        List<StudentDTO> list = studentDAO.list(keyword, sortCol);
+        request.setAttribute("studentlist", list);
+        request.getRequestDispatcher("./studentlist.jsp").forward(request, response);
+    }
+
+    private Integer parseInteger(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            log("Invalid integer format: " + value, ex);
+            return null;
+        }
+    }
+
+    private Long parseLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ex) {
+            log("Invalid long format: " + value, ex);
+            return null;
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

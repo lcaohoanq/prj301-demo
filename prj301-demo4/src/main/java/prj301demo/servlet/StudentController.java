@@ -27,11 +27,10 @@ import prj301demo.Users.UserDTO;
  *
  * @author DUNGHUYNH
  */
-public class StudentListServlet extends HttpServlet {
+public class StudentController extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -41,63 +40,22 @@ public class StudentListServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet StudentListServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            
-            RequestDispatcher rd = request.getRequestDispatcher("/menu.html");
-            rd.include(request, response);
+        UserDTO user = (UserDTO) request.getAttribute("usersession");
 
-            
-            UserDTO user = (UserDTO)request.getAttribute("usersession");
-            
-            if (user != null)
-                out.println("Hello " + user.getName());
-            
-            
-            
-            out.println("<h1>Student List </h1>");
-            
+        String action = request.getParameter("action");
+
+        if (action == null || action.equals("") || action.equals("list")) {
             String keyword = request.getParameter("keyword");
-            
-            if (keyword == null) keyword = "";
+            if (keyword == null) {
+                keyword = "";
+            }
             String sortCol = request.getParameter("colSort");
-            
-            out.print(  "    <form action='' method=GET>\n" +
-                        "        <input name=keyword type=text value='"+keyword +"'>\n" +
-                        "        <input type=submit value=Search >\n" +
-                        "    </form>");
-            
-            
-            out.print("<table>");
-            out.println("<tr><td>Id</td>");
-                        out.println("<td><a href=?colSort=firstname>First Name</a></td>");
-                        out.println("<td><a href=?colSort=lastname>Last Name</a></td>");
-                        out.println("<td>Age</td></tr>");
-
-                        
             StudentDAO dao = new StudentDAO();
             List<StudentDTO> list = dao.list(keyword, sortCol);
             
-            for (StudentDTO student: list){
-
-                        out.println("<tr><td>" + student.getId() + "</td>");
-                        out.println("<td>" + student.getFirstname()+ "</td>");
-                        out.println("<td>" + student.getLastname()+ "</td>");
-                        out.println("<td>" + student.getAge() + "</td></tr>");
-            }
-   
-           
-
-        
-            out.println("</table>");
-            out.println("</body>");
-            out.println("</html>");
+            request.setAttribute("studentlist", list);
+            
+            request.getRequestDispatcher("/studentlist.jsp").forward(request, response);
         }
     }
 

@@ -17,37 +17,36 @@ import prj301demo.utils.DBUtils;
  */
 public class UserDAO{
     
-    public UserDTO login(String username, String password){
-        
-        UserDTO user = null;
-        try {
+    public UserDTO login(String username, String password) {
 
-                Connection con = DBUtils.getConnection();            
-                String sql = " SELECT username, name FROM users ";
-                sql += " WHERE username = ?  AND password = ?";
-                               
-                PreparedStatement stmt = con.prepareStatement(sql);
-                stmt.setString(1, username);
-                stmt.setString(2, password);
-                
-                ResultSet rs = stmt.executeQuery();
-                
-                if (rs != null){
-                    if (rs.next()){
-                        
-                        user = new UserDTO();                        
-                        user.setUsername(rs.getString("username"));
-                        user.setName(rs.getString("name"));
-                    }
+        UserDTO user = null;
+        String sql = "SELECT username, password, name FROM users ";
+        sql += " WHERE username = ? AND password = ?";
+        PreparedStatement ptm = null;
+        ResultSet rs = null;
+        try {
+            Connection conn = DBUtils.getConnection();
+            if (conn != null) {
+                ptm = conn.prepareStatement(sql);
+                ptm.setString(1, username);
+                ptm.setString(2, password);
+                rs = ptm.executeQuery();
+                if (rs.next()) {
+                    user = new UserDTO();
+                    user.setUsername(rs.getString("username"));
+                    user.setPassword(rs.getString("password"));
+                    user.setName(rs.getString("name"));
                 }
-                con.close();
-            } catch (SQLException ex) {                
-                System.out.println("Error in servlet. Details:" + ex.getMessage());
-                ex.printStackTrace();
-                
             }
-            return user;
-        
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new UserDAO().login("dung", "dung"));
     }
     
 }

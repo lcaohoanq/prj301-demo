@@ -110,8 +110,8 @@ public class StudentDAO{
     Insert student and return Id
     */    
     public Long insert(StudentDTO student){
-        String sql = "INSERT INTO student( id, firstname, lastname) "               
-                + " VALUES (?, ?, ?)";    
+        String sql = "INSERT INTO student( id, firstname, lastname, age) "               
+                + " VALUES (?, ?, ?, ?)";    
         try {
             
             Connection conn = DBUtils.getConnection();
@@ -120,32 +120,65 @@ public class StudentDAO{
             ps.setInt(1, student.getId());
             ps.setString(2, student.getFirstname());
             ps.setString(3, student.getLastname());
+            ps.setInt(4, student.getAge());
 
             ps.executeUpdate();
            
 	}
         catch (SQLException ex) {
             System.out.println("Insert Student error!" + ex.getMessage());
-            ex.printStackTrace();
         }
         return null;
     }
     
     /*
-    Update student and return Id
-    */ 
-    public boolean update(StudentDTO student){
-        
-        
+ * Update student and return boolean indicating success
+     */
+    public boolean update(StudentDTO student) {
+        String sql = "UPDATE student SET firstname = ?, lastname = ?, age = ? WHERE id = ?";
+
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, student.getFirstname());
+            ps.setString(2, student.getLastname());
+            ps.setInt(3, student.getAge());
+            ps.setInt(4, student.getId());
+
+            int rowsUpdated = ps.executeUpdate();
+            conn.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException ex) {
+            System.out.println("Update Student error!" + ex.getMessage());
+            ex.printStackTrace();
+        }
+
         return false;
     }
-    
+
     /*
-    Delete student 
-    */ 
-    public boolean delete(Long id){
-        
-        
+ * Delete student by id and return boolean indicating success
+     */
+    public boolean delete(Long id) {
+        String sql = "DELETE FROM student WHERE id = ?";
+
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setLong(1, id);
+
+            int rowsDeleted = ps.executeUpdate();
+            conn.close();
+
+            return rowsDeleted > 0;
+        } catch (SQLException ex) {
+            System.out.println("Delete Student error!" + ex.getMessage());
+            ex.printStackTrace();
+        }
+
         return false;
     }
     
