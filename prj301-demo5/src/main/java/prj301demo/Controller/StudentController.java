@@ -50,6 +50,10 @@ public class StudentController extends HttpServlet {
             response.sendRedirect("login.jsp");
             return;
         }
+        
+        System.out.println("action: " + action);
+        System.out.println("keywork: " + keyword);
+        System.out.println("sortCol: " + sortCol);
 
         StudentDAO studentDAO = new StudentDAO();
         try {
